@@ -124,7 +124,7 @@ function Header({
             view === "admin" ? "active text-neutral-900" : ""
           } ${isAdmin ? "text-amber-800 font-semibold" : ""}`}
           onClick={onOpenAdmin}
-          title={isAdmin ? "관리자 대시보드 열기" : "관리자 로그인 (비밀번호: 4238)"}
+          title={isAdmin ? "관리자 대시보드 열기" : "관리자 로그인"}
         >
           {isAdmin ? <Unlock size={11} className="text-amber-600" /> : <Lock size={11} />}
           Admin
@@ -1219,7 +1219,7 @@ export default function App() {
     setAdminAuth(true)
     setIsLoginModalOpen(false)
     navigate("admin")
-    showToast("관리자 모드로 로그인되었습니다. (비밀번호: 4238)")
+    showToast("관리자 모드로 로그인되었습니다.")
   }
 
   const handleLogout = () => {
@@ -1384,7 +1384,7 @@ export default function App() {
         />
       )}
 
-      {/* Admin Login Modal (PW: 4238) */}
+      {/* Admin Login Modal */}
       <AdminLoginModal
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}

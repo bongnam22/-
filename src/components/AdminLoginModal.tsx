@@ -1,6 +1,6 @@
-import React, { useState } from "react"
-import { Lock, X, AlertCircle } from "lucide-react"
-import { ADMIN_PASSWORD } from "../data/storage"
+import React, { useState, useEffect } from "react"
+import { Lock, X, AlertCircle, ShieldAlert } from "lucide-react"
+import { verifyAdminPassword, checkLockoutStatus } from "../data/storage"
 
 interface AdminLoginModalProps {
   isOpen: boolean
@@ -10,18 +10,45 @@ interface AdminLoginModalProps {
 
 export function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLoginModalProps) {
   const [password, setPassword] = useState("")
-  const [error, setError] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [lockout, setLockout] = useState<{ isLocked: boolean; remainingSec: number }>({
+    isLocked: false,
+    remainingSec: 0,
+  })
+
+  useEffect(() => {
+    if (!isOpen) return
+    const status = checkLockoutStatus()
+    setLockout(status)
+    setPassword("")
+    setErrorMsg(null)
+  }, [isOpen])
 
   if (!isOpen) return null
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (password === ADMIN_PASSWORD) {
-      setError(false)
+
+    const currentLock = checkLockoutStatus()
+    if (currentLock.isLocked) {
+      setLockout(currentLock)
+      setErrorMsg(`비밀번호 연속 오류로 인해 ${currentLock.remainingSec}초 후 다시 시도할 수 있습니다.`)
+      return
+    }
+
+    if (verifyAdminPassword(password)) {
+      setErrorMsg(null)
       setPassword("")
       onSuccess()
     } else {
-      setError(true)
+      const updatedLock = checkLockoutStatus()
+      setLockout(updatedLock)
+      setPassword("")
+      if (updatedLock.isLocked) {
+        setErrorMsg("비밀번호 5회 연속 오류로 인해 5분간 로그인이 제한됩니다.")
+      } else {
+        setErrorMsg("비밀번호가 일치하지 않습니다. 다시 확인해주세요.")
+      }
     }
   }
 
@@ -44,48 +71,50 @@ export function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLoginModalP
 
         <div className="flex flex-col items-center text-center">
           <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-900 mb-4 border border-neutral-200">
-            <Lock size={20} />
+            {lockout.isLocked ? <ShieldAlert size={22} className="text-red-600" /> : <Lock size={20} />}
           </div>
 
           <h3 className="text-xl font-bold tracking-tight text-neutral-900 font-serif italic">
             Admin Access
           </h3>
           <p className="text-xs text-neutral-500 mt-1">
-            포트폴리오 관리자 모드로 전환하려면 비밀번호를 입력해주세요.
+            관리자 전용 로그인 공간입니다. 등록된 관리자 비밀번호를 입력해주세요.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <label className="block text-[11px] font-mono uppercase tracking-wider text-neutral-600 mb-1.5">
-              Password (비밀번호)
+              Admin Password
             </label>
             <input
               type="password"
               autoFocus
-              maxLength={10}
-              placeholder="••••"
+              disabled={lockout.isLocked}
+              maxLength={20}
+              placeholder="••••••••"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value)
-                setError(false)
+                setErrorMsg(null)
               }}
               className={`w-full px-3.5 py-2.5 text-center text-base tracking-widest bg-neutral-50 border rounded-xs font-mono focus:outline-hidden transition-all ${
-                error
+                errorMsg
                   ? "border-red-500 bg-red-50/40 text-red-700"
                   : "border-neutral-300 focus:border-neutral-900 bg-white"
-              }`}
+              } disabled:opacity-50`}
             />
-            {error && (
-              <p className="flex items-center justify-center gap-1.5 text-[11px] text-red-600 mt-2 font-mono">
-                <AlertCircle size={12} /> 비밀번호가 올바르지 않습니다. (기본: 4238)
+            {errorMsg && (
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-red-600 mt-2 font-mono text-center">
+                <AlertCircle size={12} className="shrink-0" /> {errorMsg}
               </p>
             )}
           </div>
 
           <button
             type="submit"
-            className="w-full py-2.5 bg-neutral-900 text-white text-xs font-mono uppercase tracking-widest rounded-xs hover:bg-neutral-800 transition-colors shadow-xs"
+            disabled={lockout.isLocked || !password}
+            className="w-full py-2.5 bg-neutral-900 text-white text-xs font-mono uppercase tracking-widest rounded-xs hover:bg-neutral-800 disabled:opacity-50 transition-colors shadow-xs"
           >
             Authenticate
           </button>
@@ -93,7 +122,7 @@ export function AdminLoginModal({ isOpen, onClose, onSuccess }: AdminLoginModalP
 
         <div className="mt-6 pt-4 border-t border-neutral-100 text-center">
           <span className="text-[10px] font-mono text-neutral-400">
-            Kim Bom Portfolio CMS · Password: 4238
+            bom.d Portfolio CMS · Authorized Personnel Only
           </span>
         </div>
       </div>

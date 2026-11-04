@@ -14,6 +14,10 @@ import {
   ExternalLink,
   Check,
   Sparkles,
+  Lock,
+  KeyRound,
+  ShieldCheck,
+  ShieldAlert,
 } from "lucide-react"
 import { Project } from "../data/projects"
 import {
@@ -22,6 +26,8 @@ import {
   InquiryMessage,
   resetProjects,
   deleteInquiry,
+  verifyAdminPassword,
+  setAdminPassword,
 } from "../data/storage"
 import { ProjectEditModal } from "./ProjectEditModal"
 
@@ -39,7 +45,7 @@ interface AdminDashboardProps {
   onShowToast: (msg: string) => void
 }
 
-type AdminTab = "projects" | "about" | "contact" | "inquiries"
+type AdminTab = "projects" | "about" | "contact" | "inquiries" | "security"
 
 export function AdminDashboard({
   projects,
@@ -70,6 +76,41 @@ export function AdminDashboard({
   const [newExp, setNewExp] = useState({ title: "", period: "", desc: "" })
   const [newCert, setNewCert] = useState("")
   const [newSoftware, setNewSoftware] = useState("")
+
+  // Security / Password Change State
+  const [currPwd, setCurrPwd] = useState("")
+  const [newPwd, setNewPwd] = useState("")
+  const [confirmPwd, setConfirmPwd] = useState("")
+  const [pwdMsg, setPwdMsg] = useState<{ type: "success" | "error"; text: string } | null>(null)
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!verifyAdminPassword(currPwd)) {
+      setPwdMsg({ type: "error", text: "현재 비밀번호가 일치하지 않습니다." })
+      return
+    }
+    if (newPwd.length < 4) {
+      setPwdMsg({ type: "error", text: "새 비밀번호는 최소 4자리 이상으로 설정해주세요." })
+      return
+    }
+    if (newPwd !== confirmPwd) {
+      setPwdMsg({ type: "error", text: "새 비밀번호 확인이 일치하지 않습니다." })
+      return
+    }
+    const ok = setAdminPassword(newPwd)
+    if (ok) {
+      setPwdMsg({
+        type: "success",
+        text: "관리자 비밀번호가 성공적으로 변경되었습니다. 본인 외에는 누구도 접속할 수 없습니다.",
+      })
+      setCurrPwd("")
+      setNewPwd("")
+      setConfirmPwd("")
+      onShowToast("관리자 비밀번호가 성공적으로 변경되었습니다.")
+    } else {
+      setPwdMsg({ type: "error", text: "비밀번호 저장 중 오류가 발생했습니다." })
+    }
+  }
 
   // Project Management Actions
   const handleOpenAddProject = () => {
@@ -214,10 +255,10 @@ export function AdminDashboard({
         <div className="flex items-center gap-3">
           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
           <h2 className="text-sm font-semibold tracking-tight font-serif italic">
-            Kim Bom Portfolio CMS — Admin Panel
+            bom.d Portfolio CMS — Admin Panel
           </h2>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-300">
-            PW: 4238 ACTIVE
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-800 text-emerald-400">
+            AUTHORIZED SESSION
           </span>
         </div>
 
@@ -281,6 +322,16 @@ export function AdminDashboard({
             }`}
           >
             <Mail size={14} /> Inquiries ({inquiries.length})
+          </button>
+          <button
+            onClick={() => setTab("security")}
+            className={`flex items-center gap-2 px-4 py-2.5 text-xs font-mono uppercase tracking-wider rounded-xs transition-all ${
+              tab === "security"
+                ? "bg-neutral-900 text-white font-semibold shadow-xs"
+                : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100"
+            }`}
+          >
+            <ShieldCheck size={14} /> Security &amp; Password
           </button>
         </div>
 
@@ -753,6 +804,128 @@ export function AdminDashboard({
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {/* Tab 5: Security & Password Management */}
+        {tab === "security" && (
+          <div className="space-y-6">
+            <div className="bg-white p-6 sm:p-8 rounded-sm border border-neutral-200 shadow-xs">
+              <div className="flex items-center gap-2.5 pb-4 border-b border-neutral-200 mb-6">
+                <KeyRound size={18} className="text-neutral-900" />
+                <div>
+                  <h3 className="text-base font-bold text-neutral-900">
+                    관리자 비밀번호 변경
+                  </h3>
+                  <p className="text-xs text-neutral-500">
+                    오직 나만 접속할 수 있도록 나만의 비밀번호로 안전하게 변경할 수 있습니다.
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleChangePassword} className="max-w-md space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-neutral-700 mb-1">
+                    현재 비밀번호 *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    placeholder="현재 비밀번호 입력"
+                    value={currPwd}
+                    onChange={(e) => {
+                      setCurrPwd(e.target.value)
+                      setPwdMsg(null)
+                    }}
+                    className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-xs font-mono focus:outline-hidden focus:border-neutral-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-neutral-700 mb-1">
+                    새 비밀번호 (최소 4자리 이상) *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={4}
+                    placeholder="새로운 비밀번호 입력"
+                    value={newPwd}
+                    onChange={(e) => {
+                      setNewPwd(e.target.value)
+                      setPwdMsg(null)
+                    }}
+                    className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-xs font-mono focus:outline-hidden focus:border-neutral-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-neutral-700 mb-1">
+                    새 비밀번호 확인 *
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={4}
+                    placeholder="새로운 비밀번호 재입력"
+                    value={confirmPwd}
+                    onChange={(e) => {
+                      setConfirmPwd(e.target.value)
+                      setPwdMsg(null)
+                    }}
+                    className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-xs font-mono focus:outline-hidden focus:border-neutral-900"
+                  />
+                </div>
+
+                {pwdMsg && (
+                  <div
+                    className={`p-3 rounded-xs text-xs font-mono flex items-center gap-2 ${
+                      pwdMsg.type === "success"
+                        ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                        : "bg-red-50 text-red-800 border border-red-200"
+                    }`}
+                  >
+                    {pwdMsg.type === "success" ? (
+                      <ShieldCheck size={14} className="shrink-0 text-emerald-600" />
+                    ) : (
+                      <ShieldAlert size={14} className="shrink-0 text-red-600" />
+                    )}
+                    <span>{pwdMsg.text}</span>
+                  </div>
+                )}
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-neutral-900 text-white text-xs font-mono uppercase tracking-wider rounded-xs hover:bg-neutral-800 transition-colors shadow-xs"
+                  >
+                    비밀번호 저장
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Security Policies Box */}
+            <div className="bg-neutral-50 p-6 rounded-sm border border-neutral-200/80 space-y-3">
+              <h4 className="text-xs font-mono uppercase tracking-wider text-neutral-700 font-bold flex items-center gap-2">
+                <ShieldCheck size={14} className="text-emerald-600" />
+                보안 및 권한 보호 정책
+              </h4>
+              <ul className="space-y-2 text-xs text-neutral-600 leading-relaxed list-disc list-inside">
+                <li>
+                  <strong>오직 본인만 수정 가능:</strong> 비밀번호를 모르는 일반 방문자나 외부 사용자에게는 포트폴리오 수정, 추가, 삭제 기능이 일체 비활성화됩니다.
+                </li>
+                <li>
+                  <strong>비밀번호 비공개 처리:</strong> 로그인 창과 브라우저 화면 어디에도 비밀번호나 힌트가 노출되지 않도록 전면 제거되었습니다.
+                </li>
+                <li>
+                  <strong>무차별 대입 차단:</strong> 비밀번호를 5회 연속 틀릴 경우 5분간 로그인이 자동으로 잠겨 안전하게 보호됩니다.
+                </li>
+                <li>
+                  <strong>세션 안전 종료:</strong> 작업 후 상단의 &apos;로그아웃&apos; 버튼을 누르면 즉시 관리자 권한이 해제됩니다.
+                </li>
+              </ul>
+            </div>
           </div>
         )}
       </div>

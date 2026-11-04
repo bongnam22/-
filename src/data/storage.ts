@@ -97,10 +97,85 @@ export const defaultContactData: SiteContactData = {
 const STORAGE_KEY_PROJECTS = "kimbom_portfolio_projects_v2"
 const STORAGE_KEY_ABOUT = "kimbom_portfolio_about_v2"
 const STORAGE_KEY_CONTACT = "kimbom_portfolio_contact_v2"
+const STORAGE_KEY_ADMIN_PWD = "kimbom_admin_pwd_custom"
+const STORAGE_KEY_FAILED_ATTEMPTS = "kimbom_admin_failed_attempts"
 const STORAGE_KEY_INQUIRIES = "kimbom_portfolio_inquiries_v2"
 const STORAGE_KEY_ADMIN_AUTH = "kimbom_admin_auth_v2"
+const DEFAULT_PASSWORD = "4238"
 
-export const ADMIN_PASSWORD = "4238"
+export function getAdminPassword(): string {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_ADMIN_PWD)
+    if (saved && saved.trim().length > 0) return saved
+  } catch {}
+  return DEFAULT_PASSWORD
+}
+
+export function setAdminPassword(newPassword: string): boolean {
+  if (!newPassword || newPassword.trim().length < 4) return false
+  try {
+    localStorage.setItem(STORAGE_KEY_ADMIN_PWD, newPassword.trim())
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function checkLockoutStatus(): { isLocked: boolean; remainingSec: number } {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY_FAILED_ATTEMPTS)
+    if (!raw) return { isLocked: false, remainingSec: 0 }
+    const { count, lockUntil } = JSON.parse(raw)
+    const now = Date.now()
+    if (lockUntil && now < lockUntil) {
+      return { isLocked: true, remainingSec: Math.ceil((lockUntil - now) / 1000) }
+    }
+  } catch {}
+  return { isLocked: false, remainingSec: 0 }
+}
+
+export function recordFailedAttempt(): { isLocked: boolean; attemptsLeft: number } {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY_FAILED_ATTEMPTS)
+    let count = 0
+    if (raw) {
+      count = JSON.parse(raw).count || 0
+    }
+    count += 1
+    if (count >= 5) {
+      const lockUntil = Date.now() + 5 * 60 * 1000 // 5 minutes lockout
+      sessionStorage.setItem(
+        STORAGE_KEY_FAILED_ATTEMPTS,
+        JSON.stringify({ count, lockUntil })
+      )
+      return { isLocked: true, attemptsLeft: 0 }
+    } else {
+      sessionStorage.setItem(
+        STORAGE_KEY_FAILED_ATTEMPTS,
+        JSON.stringify({ count, lockUntil: 0 })
+      )
+      return { isLocked: false, attemptsLeft: 5 - count }
+    }
+  } catch {}
+  return { isLocked: false, attemptsLeft: 3 }
+}
+
+export function resetFailedAttempts(): void {
+  try {
+    sessionStorage.removeItem(STORAGE_KEY_FAILED_ATTEMPTS)
+  } catch {}
+}
+
+export function verifyAdminPassword(input: string): boolean {
+  const currentPwd = getAdminPassword()
+  const isValid = input.trim() === currentPwd
+  if (isValid) {
+    resetFailedAttempts()
+  } else {
+    recordFailedAttempt()
+  }
+  return isValid
+}
 
 // Projects storage
 export function loadProjects(): Project[] {
