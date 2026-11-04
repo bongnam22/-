@@ -1,0 +1,8 @@
+{
+  "name": "Kim Bom Portfolio",
+  "description": "Portfolio of Kim Bom, a Graphic & Brand Designer based in Busan, Korea. Showcasing branding, editorial design, character art, and campaigns.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
