@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { Project, Category, Shape } from "../data/projects"
 import { processMultipleImageFiles, compressImageFile } from "../utils/imageStore"
+import { MotifIcon, MOTIF_OPTIONS } from "./MotifIcon"
 
 interface ProjectEditModalProps {
   isOpen: boolean
@@ -79,8 +80,24 @@ export function ProjectEditModal({
 
   const coverInputRef = useRef<HTMLInputElement>(null)
   const multiGalleryInputRef = useRef<HTMLInputElement>(null)
+  const customMotifInputRef = useRef<HTMLInputElement>(null)
 
   if (!isOpen) return null
+
+  // Handle Custom Motif Icon Image Upload
+  const handleCustomMotifUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const dataUrl = await compressImageFile(file, 256, 0.9)
+      setForm((prev) => ({
+        ...prev,
+        details: { ...prev.details, motifIcon: dataUrl },
+      }))
+    } catch {
+      alert("아이콘 이미지 업로드 중 오류가 발생했습니다.")
+    }
+  }
 
   // Handle Cover Image Upload
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -580,7 +597,7 @@ export function ProjectEditModal({
               </div>
               <div>
                 <label className="block text-xs font-medium text-neutral-700 mb-1">
-                  Concept Keyword (컨셉 키워드)
+                  Concept Keyword (컨셉 키워드 글귀) *
                 </label>
                 <input
                   type="text"
@@ -594,6 +611,132 @@ export function ProjectEditModal({
                   }
                   className="w-full px-3 py-2 text-xs border border-neutral-300 rounded-xs focus:border-neutral-900 focus:outline-hidden"
                 />
+              </div>
+            </div>
+
+            {/* Motif Icon Selection & Canvas Preview */}
+            <div className="mt-5 p-4 bg-neutral-50 rounded-xs border border-neutral-200/90 space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-neutral-200">
+                <div>
+                  <label className="block text-xs font-bold text-neutral-900">
+                    Motif Icon Customization (컨셉 모티브 아이콘 선택 및 수정)
+                  </label>
+                  <p className="text-[11px] text-neutral-500">
+                    상세 페이지의 02 / Motif 캔버스에 들어가는 시그니처 아이콘을 선택하거나 직접 이모지/아이콘 이미지로 변경하세요.
+                  </p>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-neutral-200 text-neutral-700">
+                  선택된 아이콘: {form.details.motifIcon || "star"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
+                {/* 1. Icon Selection Grid & Custom Symbol */}
+                <div className="md:col-span-2 space-y-3">
+                  <span className="block text-[11px] font-mono text-neutral-600">
+                    추천 모티브 아이콘 선택:
+                  </span>
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+                    {MOTIF_OPTIONS.map((opt) => {
+                      const isSelected = (form.details.motifIcon || "star") === opt.id
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() =>
+                            setForm({
+                              ...form,
+                              details: { ...form.details, motifIcon: opt.id },
+                            })
+                          }
+                          className={`p-2 rounded-xs border flex flex-col items-center justify-center gap-1 transition-all ${
+                            isSelected
+                              ? "border-neutral-900 bg-neutral-900 text-white shadow-xs scale-105"
+                              : "border-neutral-200 bg-white hover:border-neutral-400 text-neutral-800"
+                          }`}
+                          title={opt.name}
+                        >
+                          <div className="w-5 h-5 flex items-center justify-center">
+                            <MotifIcon
+                              name={opt.id}
+                              size={20}
+                              color={isSelected ? "#ffffff" : "currentColor"}
+                            />
+                          </div>
+                          <span className="text-[8px] font-mono truncate max-w-full">
+                            {opt.id}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+
+                  {/* Custom Symbol / Emoji / File Upload */}
+                  <div className="pt-2 border-t border-neutral-200/80 space-y-2">
+                    <span className="block text-[11px] font-mono font-medium text-neutral-700">
+                      직접 기호/이모지 입력 또는 내 컴퓨터 아이콘 업로드:
+                    </span>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        placeholder="이모지나 기호 직접 입력 (예: 🪐, 🌿, ☕, ⚡, 🎯, 🌊, ⚓)"
+                        value={
+                          MOTIF_OPTIONS.some((o) => o.id === form.details.motifIcon)
+                            ? ""
+                            : form.details.motifIcon || ""
+                        }
+                        onChange={(e) =>
+                          setForm({
+                            ...form,
+                            details: {
+                              ...form.details,
+                              motifIcon: e.target.value.trim() || "star",
+                            },
+                          })
+                        }
+                        className="w-full px-3 py-1.5 text-xs border border-neutral-300 rounded-xs bg-white"
+                      />
+
+                      <input
+                        ref={customMotifInputRef}
+                        type="file"
+                        accept="image/*,.svg"
+                        className="hidden"
+                        onChange={handleCustomMotifUpload}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => customMotifInputRef.current?.click()}
+                        className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white text-xs font-mono rounded-xs flex items-center gap-1.5 whitespace-nowrap shrink-0"
+                      >
+                        <Upload size={12} /> 내 컴퓨터 아이콘 파일
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Live Motif Canvas Preview */}
+                <div className="p-3 bg-white rounded-xs border border-neutral-200 flex flex-col items-center justify-center text-center">
+                  <span className="text-[9px] font-mono uppercase text-neutral-400 mb-2">
+                    PREVIEW IN 02 CANVAS
+                  </span>
+                  <div className="relative w-36 h-36 bg-[#f4f4f1] rounded-xs border border-neutral-300/80 flex items-center justify-center overflow-hidden shadow-2xs">
+                    <div className="motif-orbit scale-75 pointer-events-none" />
+                    <div className="relative z-10 text-neutral-900 transition-transform duration-300 hover:scale-110">
+                      <MotifIcon name={form.details.motifIcon || "star"} size={50} />
+                    </div>
+                    <div className="absolute bottom-2 left-2 text-[8px] font-mono text-neutral-500 text-left leading-tight">
+                      CORE MOTIF
+                      <br />
+                      <strong className="text-neutral-800 font-bold truncate block max-w-[110px]">
+                        {form.details.conceptKeyword || "Concept"}
+                      </strong>
+                    </div>
+                  </div>
+                  <span className="text-[9px] text-neutral-400 mt-1.5 font-mono">
+                    실제 상세 화면에 반영됩니다
+                  </span>
+                </div>
               </div>
             </div>
 

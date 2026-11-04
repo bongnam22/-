@@ -20,6 +20,7 @@ import { Lightbox } from "./components/Lightbox"
 import { AdminLoginModal } from "./components/AdminLoginModal"
 import { AdminDashboard } from "./components/AdminDashboard"
 import { ProjectEditModal } from "./components/ProjectEditModal"
+import { MotifIcon } from "./components/MotifIcon"
 import { processMultipleImageFiles } from "./utils/imageStore"
 import {
   Check,
@@ -34,7 +35,6 @@ import {
   Shield,
   Upload,
   Plus,
-  Maximize2,
 } from "lucide-react"
 
 type View = "home" | "project" | "about" | "contact" | "admin"
@@ -344,13 +344,7 @@ function ProjectDetail({
 }) {
   const currentIndex = projectsList.findIndex((p) => p.id === project.id)
   const next = projectsList[(currentIndex + 1) % projectsList.length]
-
-  const [activeLightbox, setActiveLightbox] = useState<{
-    title: string
-    subtitle: string
-    imageSrc?: string
-    variant?: "hero" | "mockup1" | "mockup2" | "mockup3" | "mockup4" | "experience"
-  } | null>(null)
+  const prev = projectsList[(currentIndex - 1 + projectsList.length) % projectsList.length]
 
   const quickImageInputRef = useRef<HTMLInputElement>(null)
 
@@ -375,10 +369,10 @@ function ProjectDetail({
     project.galleryImages && project.galleryImages.length > 0
 
   return (
-    <main className="project-page page-enter">
+    <main className="project-page page-enter pt-4">
       {/* Admin Quick Edit & Multi-image Upload Banner */}
       {isAdmin && (
-        <div className="mb-4 px-4 py-2.5 bg-neutral-900 text-white rounded-xs flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+        <div className="mb-6 px-4 py-2.5 bg-neutral-900 text-white rounded-xs flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
           <div className="flex items-center gap-2">
             <Shield size={14} className="text-amber-400" />
             <span>관리자 권한: &apos;{project.title}&apos; 이미지 업로드 및 상세 정보 수정</span>
@@ -409,332 +403,259 @@ function ProjectDetail({
         </div>
       )}
 
-      {/* Hero Showcase */}
-      <section
-        className="project-hero cursor-pointer group"
-        onClick={() =>
-          setActiveLightbox({
-            title: project.title,
-            subtitle: "Key Visual Cover",
-            imageSrc: project.coverImage,
-            variant: "hero",
-          })
-        }
-      >
-        <ProjectArt project={project} variant="hero" />
-      </section>
+      {/* Main 2-Column Split: Left = Images Stream (Original Size), Right = Sticky Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-16 items-start pb-20">
+        
+        {/* Left Column: Photos Stream (Original natural size, no forced cropping, no lightbox) */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-8 order-2 lg:order-1">
+          {hasUploadedGallery ? (
+            <div className="space-y-6">
+              {project.galleryImages?.map((imgUrl, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white rounded-xs overflow-hidden border border-neutral-200/90 shadow-2xs"
+                >
+                  <img
+                    src={imgUrl}
+                    alt={`${project.title} - ${idx + 1}`}
+                    className="w-full h-auto block object-contain"
+                    loading="lazy"
+                  />
+                  <div className="px-4 py-2 bg-neutral-50 border-t border-neutral-100 flex items-center justify-between text-[10px] font-mono text-neutral-400">
+                    <span>{project.englishTitle} — #{String(idx + 1).padStart(2, "0")}</span>
+                    <span>ORIGINAL SIZE</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Default artwork mockups if no custom photos uploaded yet */
+            <div className="space-y-6">
+              <div className="bg-white rounded-xs overflow-hidden border border-neutral-200/90 shadow-2xs">
+                <ProjectArt project={project} variant="mockup1" className="wide" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-xs overflow-hidden border border-neutral-200/90 shadow-2xs">
+                  <ProjectArt project={project} variant="mockup2" />
+                </div>
+                <div className="bg-white rounded-xs overflow-hidden border border-neutral-200/90 shadow-2xs">
+                  <ProjectArt project={project} variant="mockup3" />
+                </div>
+              </div>
+              <div className="bg-white rounded-xs overflow-hidden border border-neutral-200/90 shadow-2xs">
+                <ProjectArt project={project} variant="experience" className="wide tall" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white rounded-xs overflow-hidden border border-neutral-200/90 shadow-2xs">
+                  <ProjectArt project={project} variant="mockup4" />
+                </div>
+                <div className="bg-white rounded-xs overflow-hidden border border-neutral-200/90 shadow-2xs">
+                  <ProjectArt project={project} variant="mockup1" />
+                </div>
+              </div>
+            </div>
+          )}
 
-      {/* Project Heading & Meta */}
-      <section className="project-heading">
-        <div>
-          <p className="eyebrow">
-            Selected work · {project.category} · #{String(project.id).padStart(2, "0")}
-          </p>
-          <h1>{project.title}</h1>
-          <p className="english-title">{project.englishTitle}</p>
-          <p className="text-sm text-neutral-600 mt-3 font-medium">
-            {project.tagline}
-          </p>
+          {/* Quick Add upload prompt for Admin if empty or adding more */}
+          {isAdmin && (
+            <div
+              onClick={() => quickImageInputRef.current?.click()}
+              className="p-6 border-2 border-dashed border-neutral-300 hover:border-neutral-700 bg-neutral-50 rounded-xs text-center cursor-pointer transition-colors"
+            >
+              <div className="flex flex-col items-center justify-center gap-1.5 text-xs text-neutral-600">
+                <Upload size={18} className="text-neutral-500" />
+                <span className="font-semibold underline text-neutral-800">
+                  + 내 컴퓨터에서 사진 추가하기
+                </span>
+                <span className="text-[11px] text-neutral-400">
+                  여러 장의 사진을 선택하면 원본 비율 그대로 목록에 추가됩니다.
+                </span>
+              </div>
+            </div>
+          )}
         </div>
-        <div className="project-meta">
-          <div>
-            <span>Period</span>
-            <strong>{project.year}</strong>
-          </div>
-          <div>
-            <span>Client</span>
-            <strong>{project.details.client}</strong>
-          </div>
-          <div className="tools">
-            <span>Tools</span>
-            {project.details.tools.map((t) => (
-              <strong key={t}>{t}</strong>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* 01 / Overview */}
-      <section className="overview section-space">
-        <p className="section-label">01 / Overview</p>
-        <div className="overview-copy">
-          <div>
-            <h2>
+        {/* Right Column: Sticky Overview & Project System */}
+        <aside className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-24 lg:self-start space-y-8 order-1 lg:order-2 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-2">
+          
+          {/* Heading & Meta */}
+          <div className="space-y-4 pb-6 border-b border-neutral-200">
+            <div>
+              <p className="eyebrow text-neutral-500">
+                Selected work · {project.category} · #{String(project.id).padStart(2, "0")}
+              </p>
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-neutral-900 mt-2 leading-tight">
+                {project.title}
+              </h1>
+              <p className="english-title text-base text-neutral-500 mt-1">
+                {project.englishTitle}
+              </p>
+              <p className="text-xs text-neutral-600 mt-2.5 font-medium leading-relaxed">
+                {project.tagline}
+              </p>
+            </div>
+
+            {/* Meta tags */}
+            <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
+              <div className="p-2.5 bg-neutral-50 rounded-xs border border-neutral-200/60">
+                <span className="block text-[10px] font-mono uppercase text-neutral-400">Period</span>
+                <strong className="text-neutral-800 font-semibold">{project.year}</strong>
+              </div>
+              <div className="p-2.5 bg-neutral-50 rounded-xs border border-neutral-200/60">
+                <span className="block text-[10px] font-mono uppercase text-neutral-400">Client</span>
+                <strong className="text-neutral-800 font-semibold truncate block" title={project.details.client}>
+                  {project.details.client || "-"}
+                </strong>
+              </div>
+              <div className="p-2.5 bg-neutral-50 rounded-xs border border-neutral-200/60 col-span-2 flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase text-neutral-400">Tools</span>
+                <div className="flex gap-1.5">
+                  {project.details.tools.map((t) => (
+                    <span key={t} className="px-2 py-0.5 border border-neutral-800 rounded-full text-[10px] font-bold">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 01 / Overview */}
+          <div className="space-y-3 pb-6 border-b border-neutral-200">
+            <p className="eyebrow text-neutral-500">01 / Overview</p>
+            <h3 className="text-lg font-bold text-neutral-900 leading-snug">
               일상 속 새로운 장면을
               <br />
               만드는 디자인
-            </h2>
-            <div className="mt-6 flex flex-wrap gap-2">
+            </h3>
+            <p className="text-xs text-neutral-700 leading-relaxed pt-1">
+              {project.details.overviewKo}
+            </p>
+            <p className="text-xs text-neutral-500 leading-relaxed italic font-serif pt-1">
+              {project.details.overviewEn}
+            </p>
+
+            <div className="flex flex-wrap gap-1.5 pt-2">
               {project.details.deliverables.map((item) => (
                 <span
                   key={item}
-                  className="px-2.5 py-1 text-[11px] font-mono uppercase bg-neutral-100 text-neutral-700 rounded-xs border border-neutral-200"
+                  className="px-2 py-0.5 text-[10px] font-mono uppercase bg-neutral-100 text-neutral-700 rounded-xs border border-neutral-200"
                 >
                   {item}
                 </span>
               ))}
             </div>
           </div>
-          <div>
-            <p>{project.details.overviewKo}</p>
-            <p>{project.details.overviewEn}</p>
-          </div>
-        </div>
-      </section>
 
-      {/* 02 / Motif + Color System */}
-      <section className="system-section section-space">
-        <p className="section-label">02 / Motif + Color System</p>
-        <div className="system-grid">
-          <div className="motif-canvas">
-            <div className="motif-orbit" />
-            <div className="text-neutral-900 transform transition-transform duration-700 hover:rotate-45">
-              <Star size={64} />
-            </div>
-            <span>
-              CORE
-              <br />
-              MOTIF
-              <br />
-              <strong className="text-[11px] font-semibold text-neutral-800">
-                {project.details.conceptKeyword}
-              </strong>
-            </span>
-          </div>
+          {/* 02 / Motif + Color System */}
+          <div className="space-y-4 pb-6 border-b border-neutral-200">
+            <p className="eyebrow text-neutral-500">02 / Motif &amp; Color System</p>
 
-          <div className="swatches">
-            {project.details.palette.map((color) => {
-              const isDark =
-                color.hex === "#111111" ||
-                color.hex === "#0E1E38" ||
-                color.hex === "#003A70" ||
-                color.hex === "#191B1F" ||
-                color.hex === "#3E2723" ||
-                color.hex === "#00695C" ||
-                color.hex === "#37474F" ||
-                color.hex === "#4E342E" ||
-                color.hex === "#1B5E20" ||
-                color.hex === "#263238" ||
-                color.hex === "#8D6E63"
-
-              return (
-                <div
-                  key={color.hex}
-                  style={{
-                    backgroundColor: color.hex,
-                    color: isDark ? "#ffffff" : "#111111",
-                  }}
-                  onClick={() => copyColor(color.hex, color.name)}
-                  className="group cursor-pointer"
-                  title="Click to copy HEX code"
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="font-semibold block">{color.name}</span>
-                      <p className="text-[10px] opacity-75 mt-0.5 line-clamp-2 max-w-[140px]">
-                        {color.desc}
-                      </p>
-                    </div>
-                    <Copy
-                      size={13}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity"
-                    />
-                  </div>
-                  <div className="flex justify-between items-end">
-                    <small>{color.hex}</small>
-                    <span className="text-[9px] font-mono opacity-0 group-hover:opacity-80 transition-opacity">
-                      CLICK TO COPY
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 03 / Visual Design & Applications (Gallery Section) */}
-      <section className="gallery-section section-space">
-        <div className="flex items-center justify-between pb-2 border-b border-neutral-900">
-          <p className="section-label border-0 p-0">
-            03 / Visual Design &amp; Applications {hasUploadedGallery && `(${project.galleryImages?.length} Works)`}
-          </p>
-          {isAdmin && (
-            <button
-              onClick={() => quickImageInputRef.current?.click()}
-              className="text-xs font-mono text-neutral-600 hover:text-neutral-900 flex items-center gap-1"
-            >
-              <Plus size={13} /> 이미지 추가 업로드
-            </button>
-          )}
-        </div>
-
-        {/* If custom images have been uploaded from the user's computer */}
-        {hasUploadedGallery ? (
-          <div className="space-y-6 pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {project.galleryImages?.map((imgUrl, idx) => (
-                <div
-                  key={idx}
-                  onClick={() =>
-                    setActiveLightbox({
-                      title: `${project.title} — Detail #${idx + 1}`,
-                      subtitle: "Uploaded Portfolio Image",
-                      imageSrc: imgUrl,
-                    })
+            <div className="grid grid-cols-1 gap-3">
+              {/* Motif Canvas */}
+              <div
+                className={`relative h-44 bg-[#f4f4f1] rounded-xs border border-neutral-200 flex items-center justify-center overflow-hidden ${
+                  isAdmin ? "cursor-pointer group/motif" : ""
+                }`}
+                onClick={() => {
+                  if (isAdmin) {
+                    onQuickEdit(project)
+                    onShowToast("모티브 아이콘 및 키워드 수정창이 열렸습니다.")
                   }
-                  className={`group relative rounded-sm overflow-hidden bg-neutral-100 cursor-pointer shadow-xs border border-neutral-200/80 ${
-                    idx % 3 === 0 ? "md:col-span-2 aspect-16/9" : "aspect-4/3"
-                  }`}
-                >
-                  <img
-                    src={imgUrl}
-                    alt={`${project.title} gallery ${idx + 1}`}
-                    className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-102"
+                }}
+                title={isAdmin ? "관리자: 클릭하여 모티브 아이콘 변경" : undefined}
+              >
+                <div className="motif-orbit scale-75 pointer-events-none" />
+                <div className="text-neutral-900 transform transition-transform duration-500 hover:scale-115 flex items-center justify-center z-10">
+                  <MotifIcon
+                    name={project.details.motifIcon || "star"}
+                    size={56}
+                    color={project.accentColor || "#111111"}
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-4 text-white">
-                    <span className="text-xs font-mono tracking-widest uppercase">
-                      VIEW FULL RESOLUTION
-                    </span>
-                    <Maximize2 size={16} />
-                  </div>
                 </div>
-              ))}
+                {isAdmin && (
+                  <span className="absolute top-2 right-2 px-2 py-0.5 bg-neutral-900 text-white text-[9px] font-mono rounded-xs opacity-0 group-hover/motif:opacity-100 transition-opacity flex items-center gap-1 z-20">
+                    <Pencil size={9} /> 수정
+                  </span>
+                )}
+                <div className="absolute bottom-2.5 left-3 text-[9px] font-mono text-neutral-500 leading-tight">
+                  CORE MOTIF
+                  <br />
+                  <strong className="text-neutral-800 font-bold block truncate max-w-[150px]">
+                    {project.details.conceptKeyword}
+                  </strong>
+                </div>
+              </div>
+
+              {/* Color Swatches */}
+              <div className="grid grid-cols-2 gap-1.5">
+                {project.details.palette.map((color) => {
+                  const isDark =
+                    color.hex === "#111111" ||
+                    color.hex === "#0E1E38" ||
+                    color.hex === "#003A70" ||
+                    color.hex === "#191B1F" ||
+                    color.hex === "#3E2723" ||
+                    color.hex === "#00695C" ||
+                    color.hex === "#37474F" ||
+                    color.hex === "#4E342E" ||
+                    color.hex === "#1B5E20" ||
+                    color.hex === "#263238" ||
+                    color.hex === "#8D6E63"
+
+                  return (
+                    <div
+                      key={color.hex}
+                      style={{
+                        backgroundColor: color.hex,
+                        color: isDark ? "#ffffff" : "#111111",
+                      }}
+                      onClick={() => copyColor(color.hex, color.name)}
+                      className="p-2.5 rounded-xs flex flex-col justify-between h-20 cursor-pointer group transition-transform hover:scale-[1.02]"
+                      title="Click to copy HEX"
+                    >
+                      <div className="flex justify-between items-start">
+                        <span className="font-semibold text-[11px] leading-tight block truncate">
+                          {color.name}
+                        </span>
+                        <Copy size={11} className="opacity-0 group-hover:opacity-100 shrink-0" />
+                      </div>
+                      <small className="font-mono text-[9px] opacity-80">{color.hex}</small>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           </div>
-        ) : (
-          /* Default generative design mockups */
-          <>
-            {/* Full width mockup 1 */}
-            <div
-              className="cursor-pointer group"
-              onClick={() =>
-                setActiveLightbox({
-                  title: project.title,
-                  subtitle: project.details.visuals.mockupType1,
-                  variant: "mockup1",
-                })
-              }
+
+          {/* Navigation */}
+          <div className="pt-2 flex items-center justify-between">
+            <button
+              onClick={onBack}
+              className="text-xs font-mono uppercase tracking-wider text-neutral-600 hover:text-neutral-900 transition-colors"
             >
-              <ProjectArt project={project} variant="mockup1" className="wide" />
-            </div>
-
-            {/* Gallery Pair */}
-            <div className="gallery-pair">
-              <div
-                className="cursor-pointer group"
-                onClick={() =>
-                  setActiveLightbox({
-                    title: project.title,
-                    subtitle: project.details.visuals.mockupType2,
-                    variant: "mockup2",
-                  })
-                }
+              ← Back to all
+            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => onNext(prev)}
+                className="text-xs font-mono uppercase tracking-wider text-neutral-500 hover:text-neutral-900 transition-colors"
+                title={`Previous: ${prev.title}`}
               >
-                <ProjectArt project={project} variant="mockup2" />
-              </div>
-              <div
-                className="cursor-pointer group"
-                onClick={() =>
-                  setActiveLightbox({
-                    title: project.title,
-                    subtitle: project.details.visuals.mockupType3,
-                    variant: "mockup3",
-                  })
-                }
+                Prev
+              </button>
+              <span className="text-neutral-300">/</span>
+              <button
+                onClick={() => onNext(next)}
+                className="text-xs font-mono uppercase tracking-wider font-semibold text-neutral-900 hover:opacity-60 transition-opacity flex items-center gap-1"
+                title={`Next: ${next.title}`}
               >
-                <ProjectArt project={project} variant="mockup3" />
-              </div>
+                Next: {next.title} ↗
+              </button>
             </div>
-
-            {/* Brand Experience Banner */}
-            <div
-              className="cursor-pointer group"
-              onClick={() =>
-                setActiveLightbox({
-                  title: project.title,
-                  subtitle: project.details.visuals.bannerLabel,
-                  variant: "experience",
-                })
-              }
-            >
-              <ProjectArt
-                project={project}
-                variant="experience"
-                className="wide tall"
-              />
-            </div>
-
-            {/* Detail Pair */}
-            <div className="gallery-pair">
-              <div
-                className="cursor-pointer group"
-                onClick={() =>
-                  setActiveLightbox({
-                    title: project.title,
-                    subtitle: project.details.visuals.mockupType4,
-                    variant: "mockup4",
-                  })
-                }
-              >
-                <ProjectArt project={project} variant="mockup4" />
-              </div>
-              <div
-                className="cursor-pointer group"
-                onClick={() =>
-                  setActiveLightbox({
-                    title: project.title,
-                    subtitle: "Key Visual Architecture",
-                    variant: "mockup1",
-                  })
-                }
-              >
-                <ProjectArt project={project} variant="mockup1" />
-              </div>
-            </div>
-          </>
-        )}
-      </section>
-
-      {/* Navigation Footer */}
-      <section className="project-end">
-        <button className="back-link" onClick={onBack}>
-          ← Back to all projects
-        </button>
-        <button className="next-project" onClick={() => onNext(next)}>
-          <span>Next project</span>
-          <strong>{next.title}</strong>
-          <i>↗</i>
-        </button>
-      </section>
-
-      {/* Lightbox Modal */}
-      {activeLightbox && (
-        <Lightbox
-          isOpen={true}
-          onClose={() => setActiveLightbox(null)}
-          title={`${project.title} — ${activeLightbox.title}`}
-          subtitle={activeLightbox.subtitle}
-        >
-          <div className="w-full max-w-4xl flex items-center justify-center">
-            {activeLightbox.imageSrc ? (
-              <img
-                src={activeLightbox.imageSrc}
-                alt={activeLightbox.title}
-                className="max-h-[80vh] w-auto max-w-full object-contain rounded-xs shadow-lg"
-              />
-            ) : (
-              activeLightbox.variant && (
-                <ProjectArt
-                  project={project}
-                  variant={activeLightbox.variant}
-                  className="shadow-md"
-                />
-              )
-            )}
           </div>
-        </Lightbox>
-      )}
+        </aside>
+      </div>
     </main>
   )
 }

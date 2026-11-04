@@ -9,6 +9,7 @@ export interface ProjectDetailData {
   deliverables: string[]
   tools: string[]
   conceptKeyword: string
+  motifIcon?: string
   palette: Array<{ name: string; hex: string; desc: string }>
   visuals: {
     heroAccent: string
@@ -56,6 +57,7 @@ export const projects: Project[] = [
       deliverables: ["Key Visual Poster", "Exhibition Booth", "Wayfinding System", "Goods Package"],
       tools: ["Ai", "Ps", "Ae"],
       conceptKeyword: "Tidal Waves & Cultural Pulse",
+      motifIcon: "wave",
       palette: [
         { name: "Marine Indigo", hex: "#0E1E38", desc: "심해의 안정감과 도시적 무게감" },
         { name: "Electric Blue", hex: "#2962FF", desc: "젊은 창작자들의 에너지와 바다의 파동" },
@@ -92,6 +94,7 @@ export const projects: Project[] = [
       deliverables: ["60th Symbol Emblem", "Commemorative Book", "Summit Signage", "Digital Assets"],
       tools: ["Ai", "Id", "Ps"],
       conceptKeyword: "Global Gateway & Timeless Ribbon",
+      motifIcon: "orbit",
       palette: [
         { name: "KOTRA Heritage Blue", hex: "#003A70", desc: "국가 무역을 지탱해온 신뢰와 역사" },
         { name: "Horizon Cyan", hex: "#00A3E0", desc: "세계 시장으로 뻗어나가는 개척 정신" },
@@ -128,6 +131,7 @@ export const projects: Project[] = [
       deliverables: ["Character Key Visual", "Drone Show Title Graphic", "Beach Photozone", "Summer Merch"],
       tools: ["Ai", "Ps", "Figma"],
       conceptKeyword: "Sunny Breeze & Seaside Humor",
+      motifIcon: "sun",
       palette: [
         { name: "Penguin Sunshine", hex: "#FFC700", desc: "펭수 특유의 유쾌하고 따뜻한 시그니처 옐로우" },
         { name: "Gwangalli Ocean", hex: "#0072CE", desc: "시원하게 펼쳐진 광안리 앞바다의 청량감" },
@@ -164,6 +168,7 @@ export const projects: Project[] = [
       deliverables: ["Pop-up Store Facade", "Specialty Bread Packaging", "Character Stickers", "Stamp Card"],
       tools: ["Ai", "Ps"],
       conceptKeyword: "Whimsical Barber & Freshly Baked",
+      motifIcon: "sparkle",
       palette: [
         { name: "Golden Toast", hex: "#C77728", desc: "바삭하게 구워진 토스트 식빵의 온기" },
         { name: "Barber Carmine", hex: "#D32F2F", desc: "클래식 이발소의 상징적인 레드 스트라이프" },
@@ -200,6 +205,7 @@ export const projects: Project[] = [
       deliverables: ["Character Style Guide", "Expression Library", "Eco Merchandise", "Social Media Stickers"],
       tools: ["Ai", "Ps"],
       conceptKeyword: "Eco Ocean Sprite & Organic Pine",
+      motifIcon: "drop",
       palette: [
         { name: "Deep Lagoon", hex: "#00695C", desc: "청정한 바닷속의 깊은 평온함" },
         { name: "Sprout Pine", hex: "#80CBC4", desc: "싱그러운 솔잎과 새싹의 생명력" },
@@ -236,6 +242,7 @@ export const projects: Project[] = [
       deliverables: ["Brand Identity Guideline", "Box Packaging Suite", "Unboxing Manual", "Brand Book"],
       tools: ["Ai", "Id", "Ps"],
       conceptKeyword: "Compact Solitude & Cozy Sanctuary",
+      motifIcon: "cube",
       palette: [
         { name: "Terracotta Clay", hex: "#8D6E63", desc: "소박하고 아늑한 일상의 흙빛" },
         { name: "Raw Linen", hex: "#EFEBE9", desc: "가공되지 않은 패브릭의 자연스러움" },
@@ -272,6 +279,7 @@ export const projects: Project[] = [
       deliverables: ["Visual Identity System", "Beer Can Series (4 types)", "Glassware & Tap Handles", "Neon Signage"],
       tools: ["Ai", "Ps"],
       conceptKeyword: "Neo-Folk Tiger & High Voltage Craft",
+      motifIcon: "flame",
       palette: [
         { name: "Tiger Flame", hex: "#FF3D00", desc: "호랑이의 눈빛과 축제의 열정을 담은 네온 오렌지" },
         { name: "Sumi Ink", hex: "#111111", desc: "전통 수묵화의 짙고 깊은 먹빛" },
@@ -308,6 +316,7 @@ export const projects: Project[] = [
       deliverables: ["Brandmark & Seal", "Gift Box Structure", "Wrapping Paper & Ribbon", "Menu & Signage"],
       tools: ["Ai", "Ps", "Id"],
       conceptKeyword: "Artisanal Grain & Zen Geometry",
+      motifIcon: "flower",
       palette: [
         { name: "Soy Walnut", hex: "#4E342E", desc: "깊이 볶아낸 콩과 견과류의 진중한 고동색" },
         { name: "Grain Ochre", hex: "#BCAAA4", desc: "곱게 빻은 미숫가루와 통밀의 은은한 미색" },
@@ -344,6 +353,7 @@ export const projects: Project[] = [
       deliverables: ["Brand Identity & Badges", "Hardware Tool Packaging", "Waterproof Labels", "Lookbook"],
       tools: ["Ai", "Ps"],
       conceptKeyword: "Rugged Mountain & Campfire Wit",
+      motifIcon: "mountain",
       palette: [
         { name: "Deep Spruce", hex: "#1B5E20", desc: "울창한 침엽수림의 짙은 녹음" },
         { name: "Campfire Ember", hex: "#E65100", desc: "어둠 속에서 타오르는 모닥불 불꽃" },

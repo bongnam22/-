@@ -183,7 +183,18 @@ export function loadProjects(): Project[] {
     const raw = localStorage.getItem(STORAGE_KEY_PROJECTS)
     if (raw) {
       const parsed = JSON.parse(raw)
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed.map((p) => {
+          const def = defaultProjects.find((d) => d.id === p.id)
+          return {
+            ...p,
+            details: {
+              ...p.details,
+              motifIcon: p.details?.motifIcon || def?.details.motifIcon || "star",
+            },
+          }
+        })
+      }
     }
   } catch (e) {
     console.error("Failed to load projects from localStorage", e)
