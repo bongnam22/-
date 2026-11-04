@@ -20,7 +20,6 @@ import { Lightbox } from "./components/Lightbox"
 import { AdminLoginModal } from "./components/AdminLoginModal"
 import { AdminDashboard } from "./components/AdminDashboard"
 import { ProjectEditModal } from "./components/ProjectEditModal"
-import { MotifIcon } from "./components/MotifIcon"
 import { processMultipleImageFiles } from "./utils/imageStore"
 import {
   Check,
@@ -547,84 +546,57 @@ function ProjectDetail({
             </div>
           </div>
 
-          {/* 02 / Motif + Color System */}
-          <div className="space-y-4 pb-6 border-b border-neutral-200">
-            <p className="eyebrow text-neutral-500">02 / Motif &amp; Color System</p>
+          {/* 02 / Color System */}
+          <div className="space-y-3 pb-6 border-b border-neutral-200">
+            <div className="flex items-center justify-between">
+              <p className="eyebrow text-neutral-500">02 / Color System</p>
+              <span className="text-[10px] font-mono text-neutral-400">CLICK TO COPY HEX</span>
+            </div>
 
-            <div className="grid grid-cols-1 gap-3">
-              {/* Motif Canvas */}
-              <div
-                className={`relative h-44 bg-[#f4f4f1] rounded-xs border border-neutral-200 flex items-center justify-center overflow-hidden ${
-                  isAdmin ? "cursor-pointer group/motif" : ""
-                }`}
-                onClick={() => {
-                  if (isAdmin) {
-                    onQuickEdit(project)
-                    onShowToast("모티브 아이콘 및 키워드 수정창이 열렸습니다.")
-                  }
-                }}
-                title={isAdmin ? "관리자: 클릭하여 모티브 아이콘 변경" : undefined}
-              >
-                <div className="motif-orbit scale-75 pointer-events-none" />
-                <div className="text-neutral-900 transform transition-transform duration-500 hover:scale-115 flex items-center justify-center z-10">
-                  <MotifIcon
-                    name={project.details.motifIcon || "star"}
-                    size={56}
-                    color={project.accentColor || "#111111"}
-                  />
-                </div>
-                {isAdmin && (
-                  <span className="absolute top-2 right-2 px-2 py-0.5 bg-neutral-900 text-white text-[9px] font-mono rounded-xs opacity-0 group-hover/motif:opacity-100 transition-opacity flex items-center gap-1 z-20">
-                    <Pencil size={9} /> 수정
-                  </span>
-                )}
-                <div className="absolute bottom-2.5 left-3 text-[9px] font-mono text-neutral-500 leading-tight">
-                  CORE MOTIF
-                  <br />
-                  <strong className="text-neutral-800 font-bold block truncate max-w-[150px]">
-                    {project.details.conceptKeyword}
-                  </strong>
-                </div>
-              </div>
+            {/* Color Swatches */}
+            <div className="grid grid-cols-2 gap-2">
+              {project.details.palette.map((color) => {
+                const isDark =
+                  color.hex === "#111111" ||
+                  color.hex === "#0E1E38" ||
+                  color.hex === "#003A70" ||
+                  color.hex === "#191B1F" ||
+                  color.hex === "#3E2723" ||
+                  color.hex === "#00695C" ||
+                  color.hex === "#37474F" ||
+                  color.hex === "#4E342E" ||
+                  color.hex === "#1B5E20" ||
+                  color.hex === "#263238" ||
+                  color.hex === "#8D6E63"
 
-              {/* Color Swatches */}
-              <div className="grid grid-cols-2 gap-1.5">
-                {project.details.palette.map((color) => {
-                  const isDark =
-                    color.hex === "#111111" ||
-                    color.hex === "#0E1E38" ||
-                    color.hex === "#003A70" ||
-                    color.hex === "#191B1F" ||
-                    color.hex === "#3E2723" ||
-                    color.hex === "#00695C" ||
-                    color.hex === "#37474F" ||
-                    color.hex === "#4E342E" ||
-                    color.hex === "#1B5E20" ||
-                    color.hex === "#263238" ||
-                    color.hex === "#8D6E63"
-
-                  return (
-                    <div
-                      key={color.hex}
-                      style={{
-                        backgroundColor: color.hex,
-                        color: isDark ? "#ffffff" : "#111111",
-                      }}
-                      onClick={() => copyColor(color.hex, color.name)}
-                      className="p-2.5 rounded-xs flex flex-col justify-between h-20 cursor-pointer group transition-transform hover:scale-[1.02]"
-                      title="Click to copy HEX"
-                    >
-                      <div className="flex justify-between items-start">
-                        <span className="font-semibold text-[11px] leading-tight block truncate">
-                          {color.name}
-                        </span>
-                        <Copy size={11} className="opacity-0 group-hover:opacity-100 shrink-0" />
-                      </div>
-                      <small className="font-mono text-[9px] opacity-80">{color.hex}</small>
+                return (
+                  <div
+                    key={color.hex}
+                    style={{
+                      backgroundColor: color.hex,
+                      color: isDark ? "#ffffff" : "#111111",
+                    }}
+                    onClick={() => copyColor(color.hex, color.name)}
+                    className="p-3 rounded-xs flex flex-col justify-between h-24 cursor-pointer group transition-all hover:scale-[1.02] shadow-2xs border border-black/5"
+                    title="Click to copy HEX"
+                  >
+                    <div className="flex justify-between items-start">
+                      <span className="font-semibold text-xs leading-tight block truncate">
+                        {color.name}
+                      </span>
+                      <Copy size={11} className="opacity-0 group-hover:opacity-100 shrink-0" />
                     </div>
-                  )
-                })}
-              </div>
+                    <div>
+                      <p className="text-[10px] opacity-75 line-clamp-1 mb-1">
+                        {color.desc}
+                      </p>
+                      <small className="font-mono text-[10px] opacity-90 font-medium">
+                        {color.hex}
+                      </small>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
           </div>
 
